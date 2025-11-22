@@ -3,14 +3,10 @@
 # admixr's wrapper functions. The results of both tests (i.e. contents of
 # output log files) are then compared to each other.
 
-context("Wrapper functionality")
-
 if (admixtools_present()) {
   path <- admixtools_path()
   data_dir <- file.path(path, "data")
   examples_dir <- file.path(path, "examples")
-
-  setwd(examples_dir)
 }
 
 # f3 ----------------------------------------------------------------------
@@ -38,6 +34,24 @@ test_that("qpDstat wrapper produces correct results (4 population input version)
   expect_equivalent(
     dplyr::select(d(W = pops$W, X = pops$X, Y = pops$Y, Z = pops$Z, data = data), -stderr),
     read_output(file.path(examples_dir, "test_qpDstat1.log"))
+  )
+})
+
+# f4 ----------------------------------------------------------------------
+
+test_that("f4 wrapper prevents f4mode = TRUE being set explicitly", {
+  skip_on_cran()
+  skip_on_os("windows")
+
+  data <- eigenstrat(file.path(data_dir, "allmap"))
+  pops <- read_pops(file.path(examples_dir, "list_qpDstat1"), c("W", "X", "Y", "Z"))
+  expect_error(
+    f4(W = pops$W, X = pops$X, Y = pops$Y, Z = pops$Z, data = data, params = list(f4mode = TRUE)),
+    "admixr sets f4mode = TRUE for the qpDstat program automatically"
+  )
+  expect_s3_class(
+    f4(W = pops$W, X = pops$X, Y = pops$Y, Z = pops$Z, data = data),
+    "data.frame"
   )
 })
 
@@ -83,11 +97,10 @@ test_that("qpAdm wrapper produces correct results", {
   expect_equal(props1, props2)
 })
 
-
 test_that("qpAdm with a single source produces NULL subsets dataframe", {
   skip_on_cran()
   skip_on_os("windows")
-  
+
   data <- eigenstrat(file.path(data_dir, "qpdata"))
   left <- scan(file.path(examples_dir, "left1"), what = "character", quiet = TRUE)[1:2]
   right <- scan(file.path(examples_dir, "right1"), what = "character", quiet = TRUE) %>%
@@ -95,7 +108,6 @@ test_that("qpAdm with a single source produces NULL subsets dataframe", {
   result <- qpAdm(target = left[1], sources = left[-1], outgroups = right, data = data)
   expect_true(is.null(result$subsets))
 })
-
 
 # qpWave ------------------------------------------------------------------
 
@@ -149,3 +161,32 @@ test_that("Output object carries with it the whole log output", {
   expect_true(all(attr(res, "log_output") == readLines(list.files(outdir, pattern = "*.log$", full.names = TRUE))))
 })
 
+# 'data' is enforced to be of the EIGENSTRAT class ------------------------
+
+test_that("Input data is enforced to be of the EIGENSTRAT class", {
+  skip_on_cran()
+  skip_on_os("windows")
+
+  x <- data.frame()
+  class(x) <- "random"
+
+  error_msg <- "Input variable 'data' is not of the type EIGENSTRAT"
+  expect_error(f3(x, "a", "b", "c"), error_msg)
+  expect_error(f4(x, "a", "b", "c", "d"), error_msg)
+  expect_error(d(x, "a", "b", "c", "d"), error_msg)
+  expect_error(f4ratio(x, "x", "a", "b", "c", "d"), error_msg)
+  expect_error(qpAdm(x, "a", "b", "c" ), error_msg)
+  expect_error(qpAdm_rotation(x, "a", "b"), error_msg)
+  expect_error(qpWave(x, "a", "b"), error_msg)
+
+  expect_error(filter_bed(x, "a"), error_msg)
+  expect_error(transversions_only(x), error_msg)
+  expect_error(relabel(x), error_msg)
+  expect_error(reset(x), error_msg)
+
+  data <- eigenstrat(file.path(data_dir, "allmap"))
+  error_msg <- "Input variable 'a' is not of the type EIGENSTRAT"
+  expect_error(merge_eigenstrat("prefix", a = x, b = data), error_msg)
+  error_msg <- "Input variable 'b' is not of the type EIGENSTRAT"
+  expect_error(merge_eigenstrat("prefix", a = data, b = x), error_msg)
+})

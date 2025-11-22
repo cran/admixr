@@ -28,6 +28,17 @@ count_snps <- function(data, missing = FALSE, prop = FALSE) {
     col <- "present"
   }
   geno <- read_geno(data)
+  if (!is.null(data$exclude)) {
+    snps <- read_snp(data)
+    excluded_snps <- read_snp(data, exclude = TRUE)
+    chroms <- unique(snps$chrom)
+    sites_to_remove <- lapply(chroms, function(chrom) {
+      chrom_snps <- snps[snps$chrom == chrom, ]
+      chrom_excluded_snps <- excluded_snps[excluded_snps$chrom == chrom, ]
+      chrom_snps$pos %in% chrom_excluded_snps$pos
+    }) %>% Reduce(c, .)
+    geno <- geno[!sites_to_remove, ]
+  }
   result <- read_ind(data)
   result[[col]] <- as.vector(t(dplyr::summarise_all(geno, list(~ summary_fun(fun(.))))))
   result
@@ -36,8 +47,10 @@ count_snps <- function(data, missing = FALSE, prop = FALSE) {
 
 
 # Run a specified ADMIXTOOLS command.
-run_cmd <- function(cmd, par_file, log_file) {
-  system(paste(cmd, "-p", par_file, ">", log_file))
+run_cmd <- function(cmd, par_file, log_file, directory = NULL) {
+  # if needed, change into the required directory first
+  cd_cmd <- if (!is.null(directory)) paste("cd", directory, ";") else ""
+  system(paste(cd_cmd, cmd, "-p", par_file, ">", log_file))
 }
 
 
@@ -70,9 +83,10 @@ get_files <- function(dir_name, prefix) {
 
 # Check that the provided object is of the required type
 check_type <- function(x, type) {
-    if (!inherits(x, type)) {
-        stop(glue::glue("Object is not of the type {type}"), call. = FALSE)
-    }
+  if (!inherits(x, type)) {
+    stop(glue::glue("Input variable '{deparse(substitute(x))}' is not of the type {type}"),
+         call. = FALSE)
+  }
 }
 
 
@@ -100,10 +114,11 @@ check_presence <- function(labels, data) {
 download_data <- function(dirname = tempdir()) {
   dest <- file.path(dirname, "snps.tgz")
   utils::download.file(
-    "https://bioinf.eva.mpg.de/admixr/snps.tar.gz",
+    "http://bioinf.eva.mpg.de/admixr/snps.tar.gz",
     destfile = dest,
     method = "wget",
-    quiet = TRUE
+    quiet = TRUE,
+    extra = "--no-check-certificate"
   )
   system(paste0("cd ", dirname, "; tar xf ", dest, "; rm snps.tgz"))
   file.path(dirname, "snps", "snps")

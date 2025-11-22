@@ -86,6 +86,9 @@ print.EIGENSTRAT <- function(x, ...) {
 #'
 #' @export
 merge_eigenstrat <- function(merged, a, b, strandcheck = "NO") {
+  check_type(a, "EIGENSTRAT")
+  check_type(b, "EIGENSTRAT")
+
   parfile <- tempfile()
   paste0(
     "outputformat: EIGENSTRAT\n",
@@ -125,6 +128,8 @@ merge_eigenstrat <- function(merged, a, b, strandcheck = "NO") {
 #' @param remove Remove sites falling inside the BED file regions? By default,
 #'     sites that do not overlap BED regions are removed.
 #' @param outfile Path to an output snp file with coordinates of excluded sites.
+#' @param bedtools_args Optional arguments to `bedtools intersect` such as \code{"-sorted"}
+#'   or \code{"-sorted -nonamecheck"}.
 #'
 #' @return Updated S3 EIGENSTRAT data object.
 #'
@@ -144,7 +149,9 @@ merge_eigenstrat <- function(merged, a, b, strandcheck = "NO") {
 #' }
 #'
 #' @export
-filter_bed <- function(data, bed, remove = FALSE, outfile = tempfile(fileext = ".snp")) {
+filter_bed <- function(data, bed, remove = FALSE, outfile = tempfile(fileext = ".snp"), bedtools_args = "") {
+  check_type(data, "EIGENSTRAT")
+
   if (file.exists(outfile)) {
     warning(paste("snp file", outfile, "already exists - adding it to the EIGENSTRAT object directly."), call. = FALSE)
     data <- add_excluded_snps(data, outfile)
@@ -170,8 +177,8 @@ filter_bed <- function(data, bed, remove = FALSE, outfile = tempfile(fileext = "
   # for our purposes, this means either 0 (no overlap) or 1 (overlap)
   output <- tempfile()
   # run bedtools
-  sprintf("bedtools intersect %s -c -a %s -b %s > %s",
-          ifelse(remove, "-v", ""), tmpbed, bed, output) %>% system()
+  sprintf("bedtools intersect %s -c -a %s -b %s %s > %s",
+          ifelse(remove, "-v", ""), tmpbed, bed, bedtools_args, output) %>% system()
   # collect the results
   snp_hits <- readr::read_tsv(output,
                               col_names = c("chrom", "start", "end", "hit"),
@@ -197,23 +204,6 @@ filter_bed <- function(data, bed, remove = FALSE, outfile = tempfile(fileext = "
 #' @param outfile Path to an output snp file with coordinates of excluded sites.
 #'
 #' @return Updated S3 EIGENSTRAT data object with an additional 'exclude' slot
-#'     specifying the path to the set of SNPs to be removed.
-#'
-#' @export
-keep_transitions <- function(data, outfile = tempfile(fileext = ".snp")) {
-  .Deprecated("transversions_only")
-  transversions_only(data, outfile)
-}
-
-#' Remove transversions (C->T and G->A substitutions)
-#'
-#' Remove substitutions that are more likely to be a result of ancient DNA
-#' damage (C->T and G->A substitutions).
-#'
-#' @param data EIGENSTRAT data object.
-#' @param outfile Path to an output snp file with coordinates of excluded sites.
-#'
-#' @return Updated S3 EIGENSTRAT data object with an additional 'exclude' slot
 #'     specifying the path to the set of SNPs to be removed from a downstream
 #'     analysis.
 #'
@@ -228,6 +218,8 @@ keep_transitions <- function(data, outfile = tempfile(fileext = ".snp")) {
 #'
 #' @export
 transversions_only <- function(data, outfile = tempfile(fileext = ".snp")) {
+  check_type(data, "EIGENSTRAT")
+
   if (file.exists(outfile)) {
     warning(paste0("snp file '", outfile, "' already exists - adding it to the EIGENSTRAT object directly..."), call. = FALSE)
     data <- add_excluded_snps(data, outfile)
@@ -275,6 +267,8 @@ transversions_only <- function(data, outfile = tempfile(fileext = ".snp")) {
 #'
 #' @export
 relabel <- function(data, ..., outfile = tempfile(fileext = ".ind")) {
+  check_type(data, "EIGENSTRAT")
+
   labels <- list(...)
 
   # iterate over the lines in the "ind" file, replacing population
@@ -325,6 +319,8 @@ relabel <- function(data, ..., outfile = tempfile(fileext = ".ind")) {
 #'
 #' @export
 reset <- function(data) {
+  check_type(data, "EIGENSTRAT")
+
   data$group <- NULL
   data$exclude <- NULL
   data$excluded_n <- NULL

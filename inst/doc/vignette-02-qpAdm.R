@@ -1,5 +1,5 @@
 ## ----setup, include = FALSE---------------------------------------------------
-evaluate <- .Platform$OS.type == "unix" && system("which qpDstat", ignore.stdout = TRUE) == 0 && Sys.getenv("TRAVIS_R_VERSION") == ""
+evaluate <- .Platform$OS.type == "unix" && system("which qpDstat", ignore.stdout = TRUE) == 0
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -7,7 +7,9 @@ knitr::opts_chunk$set(
   eval = evaluate
 )
 
-## ---- message = FALSE, warning = FALSE, results = "hide"----------------------
+set.seed(42)
+
+## ----message = FALSE, warning = FALSE, results = "hide"-----------------------
 library(admixr)
 
 snps <- eigenstrat(download_data(dirname = tempdir()))
@@ -29,8 +31,10 @@ models <- qpAdm_rotation(
 ## -----------------------------------------------------------------------------
 models
 
-## ---- warning = FALSE, message = FALSE, fig.width = 6, fig.height = 4---------
-library(tidyverse)
+## ----qpAdm_fig1, warning = FALSE, message = FALSE, fig.width = 6, fig.height = 4----
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
 select(models$proportions, model, pvalue, prop1, prop2) %>%
     gather(parameter, value, -model) %>%
@@ -42,7 +46,7 @@ select(models$proportions, model, pvalue, prop1, prop2) %>%
 # filter out models which can clearly be rejected
 fits <- qpAdm_filter(models)
 
-## ---- fig.width = 6, fig.height = 4-------------------------------------------
+## ----qpAdm_fig2, fig.width = 6, fig.height = 4--------------------------------
 select(fits$proportions, model, pvalue, prop1, prop2) %>%
     gather(parameter, value, -model) %>%
     ggplot(aes(parameter, value)) +

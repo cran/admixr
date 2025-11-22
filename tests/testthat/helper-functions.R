@@ -1,5 +1,5 @@
 admixtools_present <- function() {
-  Sys.which("qpDstat") != ""
+  as.vector(Sys.which("qpDstat") != "")
 }
 
 read_pops <- function(filename, columns) {
@@ -8,7 +8,7 @@ read_pops <- function(filename, columns) {
 }
 
 read_snp_file <- function(path) {
-  readr::read_table2(
+  readr::read_table(
     path,
     col_types = "ccdicc",
     col_names = c("id", "chrom", "gen", "pos", "ref", "alt")
@@ -22,12 +22,13 @@ snp_to_bed <- function(snp, bed) {
         readr::write_tsv(bed, col_names = FALSE)
 }
 
+# Find the path to the root of the ADMIXTOOLS directory
 admixtools_path <- function() {
-    ## ugly hack to enable testing on my macOS where I have ADMIXTOOLS
-    ## binaries symlinked to ~/local/bin
-    if (system("uname", intern = TRUE) == "Darwin") {
-        return("~/local/AdmixTools-6.0/")
-    }
-
-    stringr::str_replace(Sys.which("qpDstat"), "/bin.*", "")
+  path <- Sys.which("qpDstat")
+  is_symlink <- base::isTRUE(base::nzchar(base::Sys.readlink(path), keepNA = TRUE))
+  if (is_symlink) path <- Sys.readlink(path)
+  # if ADMIXTOOLS was set up with `make install`, the binary will be under
+  # ./bin, otherwise it will be under ./src -- either way, remove those prefixes
+  # to get the root of the ADMIXTOOLS source directory
+  stringr::str_replace(path, "(/src\\/qpDstat|/bin\\/qpDstat)", "")
 }

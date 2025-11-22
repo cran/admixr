@@ -1,11 +1,7 @@
-context("Examining log outputs")
-
 if (admixtools_present()) {
   path <- admixtools_path()
   data_dir <- file.path(path, "data")
   examples_dir <- file.path(path, "examples")
-
-  setwd(examples_dir)
 }
 
 test_that("printlog() generates the same log file as ADMIXTOOLS", {

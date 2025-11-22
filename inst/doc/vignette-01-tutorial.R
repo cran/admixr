@@ -7,16 +7,18 @@ knitr::opts_chunk$set(
   eval = evaluate
 )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  install.packages("devtools")
-#  devtools::install_github("bodkan/admixr")
+## ----eval = FALSE-------------------------------------------------------------
+# install.packages("admixr")
 
-## ---- eval = FALSE------------------------------------------------------------
-#  install.packages("tidyverse")
+## ----eval = FALSE-------------------------------------------------------------
+# install.packages(c("dplyr", "ggplot2", "forcats"))
 
 ## ----libraries, message = FALSE, warning = FALSE------------------------------
 library(admixr)
-library(tidyverse)
+
+library(dplyr)
+library(ggplot2)
+library(forcats)
 
 ## ----eigenstrat_path----------------------------------------------------------
 (prefix <- download_data(dirname = tempdir()))
@@ -36,7 +38,7 @@ cat(system(paste0("head -n 3 ", prefix, ".geno"), intern = TRUE), sep = "\n")
 ## -----------------------------------------------------------------------------
 snps <- eigenstrat(prefix)
 
-## ---- comment = "#>"----------------------------------------------------------
+## ----comment = "#>"-----------------------------------------------------------
 snps
 
 ## ----pop_def1-----------------------------------------------------------------
@@ -46,7 +48,7 @@ pops <- c("French", "Sardinian", "Han", "Papuan", "Khomani_San", "Mbuti", "Dinka
 result <- d(W = pops, X = "Yoruba", Y = "Vindija", Z = "Chimp", data = snps)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  head(result)
+# head(result)
 
 ## ----d_kable, echo = FALSE----------------------------------------------------
 knitr::kable(head(result))
@@ -61,7 +63,7 @@ ggplot(result, aes(fct_reorder(W, D), D, color = abs(Zscore) > 2)) +
 result <- f4(W = pops, X = "Yoruba", Y = "Vindija", Z = "Chimp", data = snps)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  head(result)
+# head(result)
 
 ## ----f4_kable, echo = FALSE---------------------------------------------------
 knitr::kable(head(result))
@@ -69,8 +71,8 @@ knitr::kable(head(result))
 ## ----f4ratio------------------------------------------------------------------
 result <- f4ratio(X = pops, A = "Altai", B = "Vindija", C = "Yoruba", O = "Chimp", data = snps)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  head(result)
+## ----eval=FALSE---------------------------------------------------------------
+# head(result)
 
 ## ----f4ratio_kable, echo=FALSE------------------------------------------------
 knitr::kable(head(result))
@@ -87,8 +89,8 @@ pops <- c("French", "Sardinian", "Han", "Papuan", "Mbuti", "Dinka", "Yoruba")
 
 result <- f3(A = pops, B = pops, C = "Khomani_San", data = snps)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  head(result)
+## ----eval=FALSE---------------------------------------------------------------
+# head(result)
 
 ## ----f3_kable, echo=FALSE-----------------------------------------------------
 knitr::kable(head(result))
@@ -111,23 +113,10 @@ result <- qpWave(
  data = snps
 )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  result
+## ----eval = FALSE-------------------------------------------------------------
+# result
 
-## ---- echo = FALSE------------------------------------------------------------
-knitr::kable(result)
-
-## -----------------------------------------------------------------------------
-result <- qpWave(
- left = c("Papuan", "French", "Sardinian", "Han"),
- right = c("Altai", "Yoruba", "Mbuti"),
- data = snps
-)
-
-## ---- eval = FALSE------------------------------------------------------------
-#  result
-
-## ---- echo = FALSE------------------------------------------------------------
+## ----echo = FALSE-------------------------------------------------------------
 knitr::kable(result)
 
 ## ----qpAdm--------------------------------------------------------------------
@@ -135,25 +124,26 @@ result <- qpAdm(
   target = c("Sardinian", "Han", "French"),
   sources = c("Vindija", "Yoruba"),
   outgroups = c("Chimp", "Denisova", "Altai"),
-  data = snps
+  data = snps,
+  params = list(inbreed = "YES") # forced by new ADMIXTOOLS qpfstats
 )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  result$ranks
+## ----eval = FALSE-------------------------------------------------------------
+# result$ranks
 
-## ---- echo = FALSE------------------------------------------------------------
+## ----echo = FALSE-------------------------------------------------------------
 knitr::kable(result$ranks)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  result$proportions
+## ----eval = FALSE-------------------------------------------------------------
+# result$proportions
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(result$proportions)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  result$subsets
+## ----eval = FALSE-------------------------------------------------------------
+# result$subsets
 
-## ---- echo=FALSE--------------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 knitr::kable(result$subsets)
 
 ## ----orig_ind, echo = FALSE, comment = ""-------------------------------------
@@ -169,7 +159,7 @@ modif_snps <- relabel(
   Archaic = c("Vindija", "Altai", "Denisova")
 )
 
-## ---- comment = "#>"----------------------------------------------------------
+## ----comment = "#>"-----------------------------------------------------------
 modif_snps
 
 ## ----modif_ind, echo = FALSE, comment = ""------------------------------------
@@ -179,7 +169,7 @@ cat(system(paste0("column -t ", modif_snps$group), intern = TRUE), sep = "\n")
 result <- d(W = "European", X = "African", Y = "Archaic", Z = "Chimp", data = modif_snps)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  head(result)
+# head(result)
 
 ## ----modif_d_kable, echo = FALSE----------------------------------------------
 knitr::kable(head(result))
@@ -200,33 +190,33 @@ new_snps <- filter_bed(snps, bed)
 # BED file contains regions to remove from an analysis
 new_snps <- filter_bed(snps, bed, remove = TRUE)
 
-## ---- comment = "#>"----------------------------------------------------------
+## ----comment = "#>"-----------------------------------------------------------
 new_snps
 
-## ---- eval = FALSE------------------------------------------------------------
-#  snps %>%
-#    filter_bed("regions.bed") %>%
-#    d(W = "French", X = "Mbuti", Y = "Vindija", Z = "Chimp")
+## ----eval = FALSE-------------------------------------------------------------
+# snps %>%
+#   filter_bed("regions.bed") %>%
+#   d(W = "French", X = "Mbuti", Y = "Vindija", Z = "Chimp")
 
-## ---- eval = FALSE------------------------------------------------------------
-#  new_snps <- transversions_only(snps)
-#  
-#  # perform the calculation only on transversions
-#  d(W = "French", X = "Dinka", Y = "Altai", Z = "Chimp", data = new_snps)
+## ----eval = FALSE-------------------------------------------------------------
+# new_snps <- transversions_only(snps)
+# 
+# # perform the calculation only on transversions
+# d(W = "French", X = "Dinka", Y = "Altai", Z = "Chimp", data = new_snps)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  snps %>%                                    # take the original data
-#    filter_bed("regions.bed", remove = TRUE) %>%  # remove sites not in specified regions
-#    transversions_only() %>%                      # remove potential false SNPs due to aDNA damage
-#    d(W = "French", X = "Dinka", Y = "Altai", Z = "Chimp") # calculate D on the filtered dataset
+## ----eval = FALSE-------------------------------------------------------------
+# snps %>%                                    # take the original data
+#   filter_bed("regions.bed", remove = TRUE) %>%  # remove sites not in specified regions
+#   transversions_only() %>%                      # remove potential false SNPs due to aDNA damage
+#   d(W = "French", X = "Dinka", Y = "Altai", Z = "Chimp") # calculate D on the filtered dataset
 
 ## ----merge_eigenstrat, eval = FALSE-------------------------------------------
-#  # this is just an example code - it will not run unless you specify the paths
-#  merged <- merge_eigenstrat(
-#      merged = <"prefix of the merged dataset">
-#      a = first_EIGENSTRAT_object,
-#      b = second_EIGENSTRAT_object
-#  )
+# # this is just an example code - it will not run unless you specify the paths
+# merged <- merge_eigenstrat(
+#     merged = <"prefix of the merged dataset">
+#     a = first_EIGENSTRAT_object,
+#     b = second_EIGENSTRAT_object
+# )
 
 ## ----d_log, comment = "#>"----------------------------------------------------
 dres <- d(W = c("French", "Han", "Dinka"), X = "Yoruba", Y = "Vindija", Z = "Chimp", data = snps)
@@ -241,7 +231,8 @@ qpadm_res <- qpAdm(
   target = c("Sardinian", "Han"),
   sources = c("Vindija", "Yoruba"),
   outgroups = c("Chimp", "Denisova", "Altai"),
-  data = snps
+  data = snps,
+  params = list(inbreed = "YES") # forced by new ADMIXTOOLS qpfstats
 )
 
 qpadm_res

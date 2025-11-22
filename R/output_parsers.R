@@ -70,7 +70,8 @@ read_qpF4ratio <- function(log_lines) {
 
   res_df <- res_lines %>%
     paste0("\n", collapse = "\n") %>%
-    readr::read_delim(delim = " ", col_names = FALSE) %>%
+    readr::read_delim(delim = " ", col_names = FALSE, show_col_types = FALSE,
+                      progress = FALSE, col_types = readr::cols()) %>%
     stats::setNames(c("A", "O", "X", "C", "A", "O", "B", "C", "alpha", "stderr", "Zscore")) %>%
     .[c("A", "B", "X", "C", "O", "alpha", "stderr", "Zscore")]
 
@@ -107,7 +108,8 @@ read_qpDstat <- function(log_lines) {
 
   raw_cols <- res_lines %>%
     paste0("\n", collapse = "\n") %>%
-    readr::read_delim(delim = " ", col_names = FALSE)
+    readr::read_delim(delim = " ", col_names = FALSE, show_col_types = FALSE,
+                      progress = FALSE, col_types = readr::cols())
 
   # remove the weird "best" column first, then add an optional stderr column
   # (if it's present)
@@ -136,7 +138,8 @@ read_qp3Pop <- function(log_lines) {
 
   res_df <- res_lines %>%
     paste0("\n", collapse = "\n") %>%
-    readr::read_delim(delim = " ", col_names = FALSE) %>%
+    readr::read_delim(delim = " ", col_names = FALSE, show_col_types = FALSE,
+                      progress = FALSE, col_types = readr::cols()) %>%
     stats::setNames(c("A", "B", "C", "f3", "stderr", "Zscore", "nsnps"))
 
   res_df
@@ -175,7 +178,7 @@ read_qpWave <- function(log_lines, details = FALSE) {
     stringr::str_replace_all(" +", "\t") %>%
     paste0(collapse = "\n") %>%
     readr::read_tsv(col_names = c("rank", "df", "chisq", "tail", "dfdiff",
-                                  "chisqdiff", "taildiff"))
+                                  "chisqdiff", "taildiff"), col_types = readr::cols())
 
   if (details) {
     B_matrix <- lapply(seq_along(b_pos), function(i) {
@@ -199,7 +202,7 @@ read_qpWave <- function(log_lines, details = FALSE) {
 
 
 
-# Read output log file from a qp3Pop run.
+# Read output log file from a qpAdm run.
 read_qpAdm <- function(log_lines) {
   # parse the admixture proportions and standard errors
   stats <- stringr::str_subset(log_lines, "(best coefficients|std. errors):") %>%
@@ -211,10 +214,10 @@ read_qpAdm <- function(log_lines) {
     stats::setNames(c("proportion", "stderr"))
 
   # parse the population names
-  leftpops <- stringr::str_locate(log_lines, "(left|right) pops:") %>%
+  leftpops <- stringr::str_locate(log_lines, "^(left|right) pops:$") %>%
     .[, 1] %>%  { !is.na(.) } %>% which
-  target <- log_lines[leftpops[1] + 1]
-  source <- log_lines[(leftpops[1] + 2) : (leftpops[2] - 2)]
+  target <- log_lines[leftpops[1] + 1] %>% stringr::str_replace("^ +", "") %>% stringr::str_replace(" +\\d+$", "")
+  source <- log_lines[(leftpops[1] + 2) : (leftpops[2] - 2)] %>% stringr::str_replace("^ +", "") %>% stringr::str_replace(" +\\d+$", "")
 
   # parse the SNP count
   nsnps_target <- stringr::str_subset(log_lines, paste0("coverage: +", target, " ")) %>%
@@ -252,7 +255,8 @@ read_qpAdm <- function(log_lines) {
     }
     pat_df <- patterns[-1] %>%
       paste0(collapse = "\n") %>%
-      readr::read_delim(delim = " ", col_names = FALSE) %>%
+      readr::read_delim(delim = " ", col_names = FALSE, show_col_types = FALSE,
+                      progress = FALSE) %>%
       stats::setNames(pat_header)
   }
 

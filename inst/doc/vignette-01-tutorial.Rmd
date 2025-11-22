@@ -1,5 +1,5 @@
 ---
-title: "Tutorial and basic overview of the admixr R package"
+title: "Basic overview of the admixr package"
 author: "Martin Petr"
 date: "`r Sys.Date()`"
 output: html_document
@@ -63,24 +63,24 @@ installation of ADMIXTOOLS!** You can find installation instructions
 The software runs on Linux and macOS and these are the two systems that
 _admixr_ is tested on.
 
-**Furthermore, you need to make sure that R can find ADMIXTOOLS binaries on the
-`$PATH`.** If this is not the case, running `library(admixr)` will show a
-warning message with instructions on how to fix this.
+**Furthermore, you also need to make sure that R can find ADMIXTOOLS
+binaries on the `$PATH`.** You can achieve this by specifying
+`PATH=<path to the location of ADMIXTOOLS programs>` in the
+`.Renviron` file.
 
-To install *admixr* from GitHub you need to install the package `devtools`
-first. To do this, you can simply run (in R):
+To install *admixr* you can simply run the following command in your R
+session:
 
 ```{r, eval = FALSE}
-install.packages("devtools")
-devtools::install_github("bodkan/admixr")
+install.packages("admixr")
 ```
 
 Furthermore, if you want to follow the examples in this vignette, you will need
-the [tidyverse](https://www.tidyverse.org) collection of packages for
-data manipulation manipulation and plotting, which you can install with:
+the a few [tidyverse](https://tidyverse.org) packages for
+data manipulation and plotting, which you can install with:
 
 ```{r, eval = FALSE}
-install.packages("tidyverse")
+install.packages(c("dplyr", "ggplot2", "forcats"))
 ```
 
 You definitely don't need tidyverse for working with _admixr_ but it really
@@ -92,12 +92,11 @@ packages:
 
 ```{r libraries, message = FALSE, warning = FALSE}
 library(admixr)
-library(tidyverse)
+
+library(dplyr)
+library(ggplot2)
+library(forcats)
 ```
-
-
-
-
 
 ## A note about EIGENSTRAT format
 
@@ -320,7 +319,7 @@ ggplot(result, aes(fct_reorder(W, D), D, color = abs(Zscore) > 2)) +
 ```
 
 (If you want to more know about data analysis using R, including plotting with
-ggplot2, I highly recommend [this](http://r4ds.had.co.nz) free book.)
+ggplot2, I highly recommend [this](https://r4ds.had.co.nz/) free book.)
 
 We can see that the $D$ values for Africans are not significantly different from
 0, meaning that the data is consistent with the null hypothesis of no
@@ -384,7 +383,7 @@ Now we know that non-Africans today carry _some_ Neanderthal ancestry. But what 
 we want to know _how much_ Neanderthal ancestry they have? What proportion of their
 genomes is of Neanderthal origin? To answer questions like this, we can use the
 $f_4$-ratio statistic, which can be formulated in the following way (using
-a notation of [Patterson et al., 2012](http://www.genetics.org/content/192/3/1065), who formally described
+a notation of [Patterson et al., 2012](https://academic.oup.com/genetics/article/192/3/1065/5935193), who formally described
 its properties).
 
 $$f_4\textrm{-ratio} = \frac{f_4(A, O; X, C)}{f_4(A, O; B, C)}.$$
@@ -516,10 +515,10 @@ overview of the _qpWave_ method than S6 of Reich et al. 2012, and also introduce
 _qpAdm_ methodology for estimating admixture proportions.
 
 - A phenomenal description of _qpAdm_ methodology and best practices
-  by [Harney _et al._
-  2020](https://www.biorxiv.org/content/10.1101/2020.04.09.032664v1)
-  (see also PDF with [practical
-  guidelines](https://www.biorxiv.org/content/biorxiv/early/2020/04/10/2020.04.09.032664/DC1/embed/media-1.pdf?download=true). Both
+  by Harney _et al._
+  2020
+  (see also PDF with practical
+  guidelines they made available as a supplementary document. Both
   documents should really be a mandatory reading before doing any
   _qpAdm_ analysis.
 
@@ -576,31 +575,38 @@ least $n = 1$ streams of ancestry from the set of _right_ populations. In this
 case, the most likely explanation is Neandertal admixture into non-Africans
 today.
 
-Now, what happens if we add Papuans to the _left_ group?
+<!-- For whatever reason, Nick et al. no longer allow this: -->
+<!-- https://github.com/DReichLab/AdmixTools/blame/ce60d0e808c60c5dc774cd04be7b533873c5439c/src/qpWave.c#L321 -->
 
-```{r}
-result <- qpWave(
- left = c("Papuan", "French", "Sardinian", "Han"),
- right = c("Altai", "Yoruba", "Mbuti"),
- data = snps
-)
-```
+<!-- It caused crashes while working on 2025-11-21 updates: -->
+<!-- fatalx: -->
+<!-- nleft not less than or equal to nright -->
 
-```{r, eval = FALSE}
-result
-```
+<!-- Now, what happens if we add Papuans to the _left_ group? -->
 
-```{r, echo = FALSE}
-knitr::kable(result)
-```
+<!-- ```{r} -->
+<!-- result <- qpWave( -->
+<!--  left = c("Papuan", "French", "Sardinian", "Han"), -->
+<!--  right = c("Altai", "Yoruba", "Mbuti"), -->
+<!--  data = snps -->
+<!-- ) -->
+<!-- ``` -->
 
-We can now clearly reject rank $r = 0$, but we see that the data is consistent
-with rank $r = 1$, meaning that there must have been at least $n = 2$ streams of
-ancestry from _right_ to _left_ populations ($r + 1 \le n$). Because
-this happened after we introduced Papuans to the _left_ set, this could indicate
-a separate pulse of archaic introgression into Papuans, which is not
-surprising given what we know about significantly more archaic ancestry
-in Papuans than in any other present-day population.
+<!-- ```{r, eval = FALSE} -->
+<!-- result -->
+<!-- ``` -->
+
+<!-- ```{r, echo = FALSE} -->
+<!-- knitr::kable(result) -->
+<!-- ``` -->
+
+<!-- We can now clearly reject rank $r = 0$, but we see that the data is consistent -->
+<!-- with rank $r = 1$, meaning that there must have been at least $n = 2$ streams of -->
+<!-- ancestry from _right_ to _left_ populations ($r + 1 \le n$). Because -->
+<!-- this happened after we introduced Papuans to the _left_ set, this could indicate -->
+<!-- a separate pulse of archaic introgression into Papuans, which is not -->
+<!-- surprising given what we know about significantly more archaic ancestry -->
+<!-- in Papuans than in any other present-day population. -->
 
 
 
@@ -627,7 +633,8 @@ result <- qpAdm(
   target = c("Sardinian", "Han", "French"),
   sources = c("Vindija", "Yoruba"),
   outgroups = c("Chimp", "Denisova", "Altai"),
-  data = snps
+  data = snps,
+  params = list(inbreed = "YES") # forced by new ADMIXTOOLS qpfstats
 )
 ```
 
@@ -649,6 +656,7 @@ Let's start with the `ranks` element:
 ```{r, eval = FALSE}
 result$ranks
 ```
+
 ```{r, echo = FALSE}
 knitr::kable(result$ranks)
 ```
@@ -991,7 +999,8 @@ qpadm_res <- qpAdm(
   target = c("Sardinian", "Han"),
   sources = c("Vindija", "Yoruba"),
   outgroups = c("Chimp", "Denisova", "Altai"),
-  data = snps
+  data = snps,
+  params = list(inbreed = "YES") # forced by new ADMIXTOOLS qpfstats
 )
 
 qpadm_res
@@ -1032,6 +1041,6 @@ rm qpAdm_Neandertal_ancestry_Sardinian.txt
 
 ---
 
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a>
+<a rel="license" href="https://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a>
 
-This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.

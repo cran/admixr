@@ -10,35 +10,40 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-evaluate <- .Platform$OS.type == "unix" && system("which qpDstat", ignore.stdout = TRUE) == 0 && Sys.getenv("TRAVIS_R_VERSION") == ""
+evaluate <- .Platform$OS.type == "unix" && system("which qpDstat", ignore.stdout = TRUE) == 0
 
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   eval = evaluate
 )
+
+set.seed(42)
 ```
+
+**Note:** The functionality described in this vignette is still quite
+experimental. Please keep this in mind when running qpAdm analyses and
+be extra careful when drawing conclusions. Feedback, criticisms and
+suggestions on this functionality are more then welcome!
 
 ## Introduction
 
 qpAdm model fitting is a complex topic. To navigate it successfuly
 requires solid knowledge of the $f$-statistics theory first introduced
 by Nick Patterson and colleagues [in
-2012](https://www.genetics.org/content/192/3/1065). As part of our
-[tutorial](tutorial.html#qpwave-and-qpadm-1), we have looked at a very
+2012](https://academic.oup.com/genetics/article/192/3/1065/5935193). As part of our
+[tutorial](vignette-01-tutorial.html), we have looked at a very
 basic overview of the qpAdm-related functionality implemented in
 _admixr_. We also talked about the most important resources for
 learning more about this powerful method pioneered by Iosif Lazaridis
 in [2015](https://www.nature.com/articles/nature14317).
 
-Recently, Harney _et al._ published an exciting new preprint called
+Recently, Harney _et al._ published an exciting paper called
 ["Assessing the Performance of qpAdm: A Statistical Tool for Studying
 Population
-Admixture"](https://www.biorxiv.org/content/10.1101/2020.04.09.032664v1). Before
+Admixture"](https://academic.oup.com/genetics/article/217/4/iyaa045/6070149). Before
 we go any further, I encourage everyone to read it and the superb
-tutorial/guide available as its [supplementary
-pdf](https://www.biorxiv.org/content/10.1101/2020.04.09.032664v1.supplementary-material)
-on bioRxiv. There really isn't a better source of information on how
+tutorial/guide available as its supplementary PDF. There really isn't a better source of information on how
 to run and interpret qpAdm analyses.
 
 Please, only attempt to run qpAdm if you have familiarized yoursef
@@ -60,8 +65,8 @@ carefully choose a number of so called 'outgroup' populations (also
 called 'references' or 'right' populations, depending on whom you talk
 to).
 
-The preprint by [Harney _et
-al._](https://www.biorxiv.org/content/10.1101/2020.04.09.032664v1)
+The above mentioned paper by Harney _et
+al._
 described an interesting idea to find a set of the most appropriate
 models (i.e. combinations of source and outgroup populations) which
 has been sucessfully used in the past. They call the method a
@@ -127,7 +132,7 @@ this as an illustration because:
 First, let's download and install a development version of _admixr_ to
 get access to the new features, and download a small example data set:
 
-```{r, message = FALSE, warning = FALSE, results = "hide"}
+```{r,  message = FALSE, warning = FALSE, results = "hide"}
 library(admixr)
 
 snps <- eigenstrat(download_data(dirname = tempdir()))
@@ -208,8 +213,10 @@ Notice two things (each dot represents one examined _qpAdm_ model):
 - Many models have very low p-values - this means these are
   incompatible with the data and can be rejected.
 
-```{r, warning = FALSE, message = FALSE, fig.width = 6, fig.height = 4}
-library(tidyverse)
+```{r, qpAdm_fig1, warning = FALSE, message = FALSE, fig.width = 6, fig.height = 4}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
 select(models$proportions, model, pvalue, prop1, prop2) %>%
     gather(parameter, value, -model) %>%
@@ -242,7 +249,7 @@ Neandertal component in modern humans - we would expect about 2-3%
 based on many previous analyses) and one large ("modern human"
 component, non-Neandertal ancestry):
 
-```{r, fig.width = 6, fig.height = 4}
+```{r, qpAdm_fig2, fig.width = 6, fig.height = 4}
 select(fits$proportions, model, pvalue, prop1, prop2) %>%
     gather(parameter, value, -model) %>%
     ggplot(aes(parameter, value)) +

@@ -36,6 +36,8 @@
 #'
 #' @export
 f4ratio <- function(data, X, A, B, C, O, outdir = NULL, params = NULL) {
+  check_type(data, "EIGENSTRAT")
+
   check_presence(c(X, A, B, C, O), data)
 
   # get the path to the population, parameter and log files
@@ -59,6 +61,8 @@ f4ratio <- function(data, X, A, B, C, O, outdir = NULL, params = NULL) {
 #'
 #' @export
 d <- function(data, W, X, Y, Z, quartets = NULL, outdir = NULL, f4mode = FALSE, params = NULL) {
+  check_type(data, "EIGENSTRAT")
+
   if (is.null(quartets)) {
     check_presence(c(W, X, Y, Z), data)
   } else {
@@ -94,7 +98,12 @@ d <- function(data, W, X, Y, Z, quartets = NULL, outdir = NULL, f4mode = FALSE, 
 #'
 #' @export
 f4 <- function(data, W, X, Y, Z, quartets = NULL, outdir = NULL, params = NULL) {
-  d(data, W, X, Y, Z, quartets, outdir, f4mode = TRUE)
+  check_type(data, "EIGENSTRAT")
+
+  if ("f4mode" %in% names(params))
+    stop("admixr sets f4mode = TRUE for the qpDstat program automatically", call. = FALSE)
+
+  d(data, W, X, Y, Z, quartets, outdir, f4mode = TRUE, params = params)
 }
 
 
@@ -105,6 +114,7 @@ f4 <- function(data, W, X, Y, Z, quartets = NULL, outdir = NULL, params = NULL) 
 #'
 #' @export
 f3 <- function(data, A, B, C, outdir = NULL, inbreed = FALSE, params = NULL) {
+  check_type(data, "EIGENSTRAT")
   check_presence(c(A, B, C), data)
 
   # get the path to the population, parameter and log files
@@ -133,7 +143,10 @@ f3 <- function(data, A, B, C, outdir = NULL, inbreed = FALSE, params = NULL) {
 #'
 #' @param data EIGENSTRAT data object.
 #' @param outdir Where to put all generated files (temporary directory by default).
-#' @param params Named list of parameters and their values.
+#' @param params Named list of parameters and their values. For instance,
+#'   \code{params = list(allsnps = "YES")} or \code{params = list(blgsize = 0.01)}
+#'   (or an arbitrary combination of parameters using a list with multiple named
+#'   elements).
 #'
 #' @return List of three components:
 #'     1. estimated ancestry proportions
@@ -158,6 +171,10 @@ f3 <- function(data, A, B, C, outdir = NULL, inbreed = FALSE, params = NULL) {
 #' @export
 qpAdm <- function(data, target, sources, outgroups, outdir = NULL,
                   params = list(allsnps = "YES", summary = "YES", details = "YES")) {
+  check_type(data, "EIGENSTRAT")
+
+  check_type(data, "EIGENSTRAT")
+
     if (length(outgroups) < length(sources) + 1) {
         stop("The number of outgroup samples has to be larger or equal than the number of sources + 1",
              call. = FALSE)
@@ -251,7 +268,9 @@ qpAdm <- function(data, target, sources, outgroups, outdir = NULL,
 #'
 #' @export
 qpWave <- function(data, left, right, maxrank = NULL, details = FALSE, outdir = NULL, params = NULL) {
+  check_type(data, "EIGENSTRAT")
   check_presence(c(left, right), data)
+
   if (length(intersect(left, right))) {
     stop("Duplicated populations in both left and right population sets not allowed: ",
          paste(intersect(left, right), collapse = " "),

@@ -1,5 +1,3 @@
-context("Utility functions")
-
 ## Checking for object types---------------------- ------------------------
 test_that("Type check reveals wrong admixr type", {
     x <- data.frame()
@@ -99,6 +97,23 @@ test_that("SNP counts correspond to numbers from CLI utilities", {
 
   expect_equal(count_snps(data)$present, shell_counts$present)
   expect_equal(count_snps(data, missing = TRUE)$missing, shell_counts$missing)
+})
+
+test_that("'excluded' is taken into account when running count_snps", {
+  skip_on_cran()
+  skip_on_os("windows")
+
+  data <- eigenstrat(prefix = file.path(admixtools_path(), "convertf", "example"),
+                     geno = file.path(admixtools_path(), "convertf", "example.eigenstratgeno"))
+
+  filtered_data <- transversions_only(data)
+
+  sites_to_remove <- read_snp(filtered_data, exclude = TRUE)
+
+  orig_counts <- count_snps(data)
+  filtered_counts <- count_snps(filtered_data)
+
+  expect_true(all(filtered_counts$present == orig_counts$present - nrow(sites_to_remove)))
 })
 
 # EIGENSTRAT merging--------------------------------------------------------
